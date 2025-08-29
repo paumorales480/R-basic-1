@@ -50,4 +50,90 @@ tabla_discapacidad <- datos_dis %>%
   )
 
 tabla_discapacidad
-write_xlsx(tabla_discapacidad, "pob_discapacidad_fin.xlsx")
+#write_xlsx(tabla_discapacidad, "pob_discapacidad_fin.xlsx")
+
+
+#Población para 2050 con los poderosos datos de CONAPO
+X0_Pob_Mitad_1950_2070 <- read_excel("0_Pob_Mitad_1950_2070.xlsx")
+head(X0_Pob_Mitad_1950_2070)
+datos <- X0_Pob_Mitad_1950_2070 %>%
+  mutate(grupo_edad = case_when(
+    EDAD < 12 ~ "menores de 12",
+    EDAD >= 60 ~ "60+",
+    EDAD >= 12 & EDAD < 60 ~ "otros"
+  )) %>% 
+  filter(ENTIDAD == "Ciudad de México",
+         AÑO == 2050) %>% 
+  group_by(grupo_edad) %>% 
+  summarise(
+    total = sum(POBLACION),
+    .groups = "drop"
+  ) %>% 
+  mutate(
+    porcentaje = round(100 * total / sum(total), 1)
+  )
+
+datos
+
+
+
+datos_2 <- X0_Pob_Mitad_1950_2070 %>%
+  filter(ENTIDAD == "Ciudad de México",
+         AÑO == 2050)
+str(datos_2$EDAD)
+summary(datos_2$EDAD)
+datos_2
+#edad mediana de 2050
+median(datos_2$EDAD, na.rm = TRUE) #sale 54.5
+mean(datos_2$EDAD, na.rm = TRUE) #54.5
+
+
+#####
+#índice de envejecimiento 
+#Dato de Fide: 267 personas mayores por cada 100 menores de 15 años
+datos_3 <- X0_Pob_Mitad_1950_2070 %>% 
+  mutate(grupo_edad = case_when(
+    EDAD < 15 ~ "menores de 15",
+    EDAD >= 60 ~ "60+",
+    EDAD >= 15 & EDAD < 60 ~ "otros"
+  )) %>% 
+  filter(ENTIDAD == "Ciudad de México",
+         AÑO == 2050) %>% 
+  group_by(grupo_edad) %>% 
+  summarise(total = sum(POBLACION), .groups = "drop")
+datos_3
+
+#índice de envejecimiento
+indice_envejecimiento <- round((datos_3$total[datos_3$grupo_edad == "60+"] /
+                            datos_3$total[datos_3$grupo_edad == "menores de 15"]) * 100,1)
+
+print(paste0("El índice de envejecimiento es de: ",indice_envejecimiento)) #344.3
+
+
+#porcentaje de la pob de 30 a 59 años, respecto al total de la pob en 2050
+datos_4 <- X0_Pob_Mitad_1950_2070 %>% 
+  mutate(grupo_edad = case_when(
+    EDAD <= 11 ~ "infancias",
+    EDAD >= 60 ~ "adultos mayores",
+    EDAD >= 0 & EDAD <= 17 ~ "infancias y adolescentes",
+    EDAD >= 30 & EDAD <=59 ~ "pob adulta",
+    EDAD >= 12 & EDAD <=29 ~ "jóvenes"
+  )) %>% 
+  filter(ENTIDAD == "Ciudad de México",
+         AÑO == 2050) %>% 
+  group_by(grupo_edad) %>% 
+  summarise(
+    total = sum(POBLACION),
+    .groups = "drop"
+  ) %>% 
+  mutate(
+    porcentaje = round(100 * total / sum(total), 1)
+  )  
+datos_4
+
+
+
+
+
+
+
